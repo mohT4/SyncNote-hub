@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const joi = reqire('joi');
+const bcrypt = require('bcrypt');
 
 const userScema = mongoose.Schema(
   {
@@ -43,6 +44,17 @@ userScema.pre('save', async function (next) {
   await Schema.validateAsync(userObjt);
   next();
 });
+
+userScema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userScema.methods.comparePassword = async function (currentPD, candiatePD) {
+  return await bcrypt.compare(currentPD, candiatePD);
+};
 
 const User = mongoose.model('user', userScema);
 
